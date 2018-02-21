@@ -1,9 +1,11 @@
+#include <list>
 #include <iostream>
 #include <fstream>
 #include "pin.H"
 //#include <map>
 #include<string>
 #include <unordered_map>
+#include<algorithm>
 ofstream OutFile;
 
 typedef struct ProgStats
@@ -35,6 +37,12 @@ typedef struct ProgStats
 	UINT64 _wardep932;
 	UINT64 _wardep32;
 
+	UINT64 _temp1_02;
+	UINT64 _temp1_38;
+	UINT64 _temp1_916;
+	UINT64 _temp1_1732;
+	UINT64 _temp1_33;
+
 } PROG_STATS;
 
 typedef struct rw
@@ -54,6 +62,10 @@ UINT32 readopsarray[10], writeopsarray[10];
 UINT32 read_i[200];
 UINT32 write_i[200];
 
+//UINT64 refarray[1000];
+UINT64 max_diff;
+
+list<UINT64> locality;
 
 static unordered_map<string, UINT32> regtoi;
 
@@ -199,7 +211,70 @@ VOID calcdependancy(UINT32* readarr, UINT32 readlen, UINT32* writearr, UINT32 wr
 		write_i[writearr[i]] = *inscount;
 }
 	
+VOID calcpdf1(VOID* addr)
+{
+	//cout << "1" << endl;
+	UINT64 access = (UINT64)addr/8;
+	UINT64 diff = 0;
+	//cout << access << endl;
+	//cout << "2" << endl;
+	//start searching for 'access' address in the 'alladdress' set corresponding to 'locality' stack
+	std::list<UINT64>::iterator it = std::find(locality.begin(), locality.end(), access);
+	if (it == locality.end())
+	{
+		//cout << "COUNTER " << stats->_instrcount << " NOT FOUND" << endl;
+		locality.push_front(access);
+	}
+	else
+	{
+		//cout << "3" << endl;
+		//means the element was found
+		//diff = it - locality.begin();
+		//cout << "found" << endl;
+		//cout << "COUNTER " << stats->_instrcount << " FOUND" << endl; 
+		std::list<UINT64>::const_iterator loop_it;
+		//cout << "initial value of diff " << diff << endl;
 
+		for (loop_it = locality.begin(); loop_it != locality.end(); ++loop_it)
+		{
+			//cout << "looping" << endl;
+			diff++;
+			//cout << "diff = " << diff << endl;
+			if (*loop_it == access)
+			{
+				//cout << "will try to print *loop_it" << endl;
+				//cout << *loop_it << endl;
+				//cout << "breaking oout " << endl;
+				break;
+						
+			}
+		}
+		
+		//cout << "diff " << diff << "max_diff " << diff_max << endl;
+		//cout << "final value of diff " << diff << endl;
+		//cout << "max size of list " << locality.max_size() << endl;
+		/*if (diff > max_diff)
+		{
+			max_diff = diff;
+			cout << "max  " << max_diff << endl;
+		}*/
+		if (diff <= 2)
+			stats->_temp1_02++;
+		else if (diff <= 8)
+			stats->_temp1_38++;
+		else if (diff <= 16)
+			stats->_temp1_916++;
+		else if (diff <= 32)
+			stats->_temp1_1732++;
+		else
+			stats->_temp1_33++;
+		locality.erase(it);
+		locality.push_front(access);
+	}
+	
+	
+
+}
 
 /*
 VOID opwritten(UINT32 regoperand, UINT64* inscount)
@@ -358,6 +433,18 @@ VOID Instruction(INS ins, VOID *v) // instrumentation routine
 	INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)calcdependancy, IARG_PTR, readopsarray, IARG_UINT32, readops, IARG_PTR, writeopsarray, IARG_UINT32, writeops, IARG_PTR, &(stats->_instrcount), IARG_END);
 
 
+	// PART 5 STARTS NOW
+	
+	//cout << "part 5" << endl;
+	UINT32 memops = INS_MemoryOperandCount(ins);
+	UINT32 memop;
+
+	for (memop=0; memop<memops; memop++)
+	{
+		INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)calcpdf1, IARG_MEMORYOP_EA, memop, IARG_END);
+	}
+
+
 }
 
 VOID Trace(TRACE trace, VOID *v)
@@ -410,8 +497,13 @@ VOID Fini(INT32 code, VOID *v)
 	OutFile << "WAR between 0 to 2: " << stats->_wardep02 << endl;
 	OutFile << "WAR between 3 to 8: " << stats->_wardep38 << endl;
 	OutFile << "WAR between 9 to 32: " << stats->_wardep932 << endl;
-	OutFile << "WAR between 33 to INF: " << stats->_wardep32 << endl;
+	OutFile << "WAR between 33 to INF: " << stats->_wardep32 << endl << endl << endl;
 
+	OutFile << "Temporal Density Byte 0 to 2: " << stats->_temp1_02 << endl;
+	OutFile << "Temporal Density Byte 3 to 8: " << stats->_temp1_38 << endl;
+	OutFile << "Temporal Density Byte 9 to 16: " << stats->_temp1_916 << endl;
+	OutFile << "Temporal Density Byte 17 to 32: " << stats->_temp1_1732 << endl;
+	OutFile << "Temporal Density Byte 33 to INF: " << stats->_temp1_33 << endl;
 }
 INT32 Usage()
 {
@@ -448,11 +540,23 @@ int main(int argc, char* argv[])
 	stats->_wardep38 = 0;
 	stats->_wardep932 = 0;
 	stats->_wardep32 = 0;
+	
+	stats->_temp1_02 = 0;
+	stats->_temp1_38 = 0;
+	stats->_temp1_916 = 0;
+	stats->_temp1_1732 = 0;
+	stats->_temp1_33 = 0;
+	
 	cout << "before for loops" << endl;
+
 	for (int i=0; i<200; i++)
 		read_i[i] = 0;
 	for (int i=0; i<200; i++)
 		write_i[i] = 0;
+	//for (int i=0; i<1000; i++)
+	//	refarray[i] = 0;
+	max_diff = 0;
+
 	cout << "beginning" << endl;
 	if (PIN_Init(argc, argv))
 		return Usage();
