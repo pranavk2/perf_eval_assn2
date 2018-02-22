@@ -22,6 +22,7 @@ typedef struct ProgStats
 	UINT64 _fwdbrcount;
 	UINT64 _takenfwdbrcount;
 	UINT64 _bblcount;
+	UINT64 _meminstrcount;
 //	UINT64 _insbblcount;
 	//UINT64 _rawdep;
 	UINT64 _rawdep02;
@@ -43,6 +44,18 @@ typedef struct ProgStats
 	UINT64 _temp1_1732;
 	UINT64 _temp1_33;
 
+	UINT64 _temp32_02;
+	UINT64 _temp32_38;
+	UINT64 _temp32_916;
+	UINT64 _temp32_1732;
+	UINT64 _temp32_33;
+
+	UINT64 _temp4k_02;
+	UINT64 _temp4k_38;
+	UINT64 _temp4k_916;
+	UINT64 _temp4k_1732;
+	UINT64 _temp4k_33;
+
 } PROG_STATS;
 
 typedef struct rw
@@ -52,6 +65,14 @@ typedef struct rw
 } RW;
 
 unordered_map<UINT32, RW> raw;
+
+unordered_map<UINT64, UINT64> reref;
+
+unordered_map<UINT64, UINT64> reref2;
+
+unordered_map<UINT64, UINT64> reref3;
+
+
 
 UINT64 test = 0;
 PROG_STATS *stats = new PROG_STATS;
@@ -210,7 +231,111 @@ VOID calcdependancy(UINT32* readarr, UINT32 readlen, UINT32* writearr, UINT32 wr
 	for (i=0; i<writelen; i++)
 		write_i[writearr[i]] = *inscount;
 }
-	
+
+VOID calcrerefbyte(VOID* addr)
+{
+	UINT64 access= (UINT64) addr/8;
+	UINT64 diff = 0;
+	if (reref.find(access) == reref.end())
+	{
+		reref[access] = stats->_meminstrcount;
+	}
+	else
+	{
+		diff = stats->_meminstrcount - reref[access];
+		/*cout << "diff " << diff << endl;
+		if (diff > max_diff)
+		{
+			max_diff = diff;
+			cout << "max " << max_diff << endl;
+		}*/
+		if (diff <= 2)
+			stats->_temp1_02++;
+		else if (diff <= 8)
+			stats->_temp1_38++;
+		else if (diff <= 16)
+			stats->_temp1_916++;
+		else if (diff <= 32)
+			stats->_temp1_1732++;
+		else
+			stats->_temp1_33++;
+
+		reref[access] = stats->_meminstrcount;
+	}
+
+}
+
+
+VOID calcrerefcl(VOID* addr)
+{
+	UINT64 access= (UINT64) addr/(8*32);
+	UINT64 diff = 0;
+	if (reref2.find(access) == reref2.end())
+	{
+		reref2[access] = stats->_meminstrcount;
+	}
+	else
+	{
+		diff = stats->_meminstrcount - reref2[access];
+		/*cout << "diff " << diff << endl;
+		if (diff > max_diff)
+		{
+			max_diff = diff;
+			cout << "max " << max_diff << endl;
+		}*/
+		if (diff <= 2)
+			stats->_temp32_02++;
+		else if (diff <= 8)
+			stats->_temp32_38++;
+		else if (diff <= 16)
+			stats->_temp32_916++;
+		else if (diff <= 32)
+			stats->_temp32_1732++;
+		else
+			stats->_temp32_33++;
+
+		reref2[access] = stats->_meminstrcount;
+	}
+
+}
+
+
+VOID calcrerefpage(VOID* addr)
+{
+	UINT64 access= (UINT64) addr/(8*4*1024);
+	UINT64 diff = 0;
+	if (reref3.find(access) == reref3.end())
+	{
+		reref3[access] = stats->_meminstrcount;
+	}
+	else
+	{
+		diff = stats->_meminstrcount - reref3[access];
+		/*cout << "diff " << diff << endl;
+		if (diff > max_diff)
+		{
+			max_diff = diff;
+			cout << "max " << max_diff << endl;
+		}*/
+		if (diff <= 2)
+			stats->_temp4k_02++;
+		else if (diff <= 8)
+			stats->_temp4k_38++;
+		else if (diff <= 16)
+			stats->_temp4k_916++;
+		else if (diff <= 32)
+			stats->_temp4k_1732++;
+		else
+			stats->_temp4k_33++;
+
+		reref3[access] = stats->_meminstrcount;
+	}
+
+}
+
+
+
+
 VOID calcpdf1(VOID* addr)
 {
 	//cout << "1" << endl;
@@ -439,9 +564,14 @@ VOID Instruction(INS ins, VOID *v) // instrumentation routine
 	UINT32 memops = INS_MemoryOperandCount(ins);
 	UINT32 memop;
 
+	if (memops != 0)
+		INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_PTR, &(stats->_meminstrcount), IARG_END); 
+
 	for (memop=0; memop<memops; memop++)
 	{
-		INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)calcpdf1, IARG_MEMORYOP_EA, memop, IARG_END);
+		INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)calcrerefbyte, IARG_MEMORYOP_EA, memop, IARG_END);
+		INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)calcrerefcl, IARG_MEMORYOP_EA, memop, IARG_END);
+		INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)calcrerefpage, IARG_MEMORYOP_EA, memop, IARG_END);
 	}
 
 
@@ -503,7 +633,19 @@ VOID Fini(INT32 code, VOID *v)
 	OutFile << "Temporal Density Byte 3 to 8: " << stats->_temp1_38 << endl;
 	OutFile << "Temporal Density Byte 9 to 16: " << stats->_temp1_916 << endl;
 	OutFile << "Temporal Density Byte 17 to 32: " << stats->_temp1_1732 << endl;
-	OutFile << "Temporal Density Byte 33 to INF: " << stats->_temp1_33 << endl;
+	OutFile << "Temporal Density Byte 33 to INF: " << stats->_temp1_33 << endl << endl << endl;
+
+	OutFile << "Temporal Density Cache Line 0 to 2: " << stats->_temp32_02 << endl;
+	OutFile << "Temporal Density Cache Line 3 to 8: " << stats->_temp32_38 << endl;
+	OutFile << "Temporal Density Cache Line 9 to 16: " << stats->_temp32_916 << endl;
+	OutFile << "Temporal Density Cache Line 17 to 32: " << stats->_temp32_1732 << endl;
+	OutFile << "Temporal Density Cache Line 33 to INF: " << stats->_temp32_33 << endl << endl << endl;
+
+	OutFile << "Temporal Density Page Size 0 to 2: " << stats->_temp4k_02 << endl;
+	OutFile << "Temporal Density Page Size 3 to 8: " << stats->_temp4k_38 << endl;
+	OutFile << "Temporal Density Page Size 9 to 16: " << stats->_temp4k_916 << endl;
+	OutFile << "Temporal Density Page Size 17 to 32: " << stats->_temp4k_1732 << endl;
+	OutFile << "Temporal Density Page Size 33 to INF: " << stats->_temp4k_33 << endl << endl << endl;
 }
 INT32 Usage()
 {
@@ -528,6 +670,8 @@ int main(int argc, char* argv[])
 	stats->_fwdbrcount = 0;
 	stats->_takenfwdbrcount = 0;
 
+	stats->_meminstrcount = 0;
+
 	stats->_rawdep02 = 0;
 	stats->_rawdep38 = 0;
 	stats->_rawdep932 = 0;
@@ -546,6 +690,21 @@ int main(int argc, char* argv[])
 	stats->_temp1_916 = 0;
 	stats->_temp1_1732 = 0;
 	stats->_temp1_33 = 0;
+
+	stats->_temp32_02 = 0;
+	stats->_temp32_38 = 0;
+	stats->_temp32_916 = 0;
+	stats->_temp32_1732 = 0;
+	stats->_temp32_33 = 0;
+
+	stats->_temp4k_02 = 0;
+	stats->_temp4k_38 = 0;
+	stats->_temp4k_916 = 0;
+	stats->_temp4k_1732 = 0;
+	stats->_temp4k_33 = 0;
+
+
+
 	
 	cout << "before for loops" << endl;
 
