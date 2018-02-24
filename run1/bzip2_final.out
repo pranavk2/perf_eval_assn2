@@ -1,0 +1,60 @@
+Count of --
+
+	All Instructions: 372521448109
+	Integer Instructions: 107008911047
+	Floating Point Instructions: 0
+	Load Instructions: 169365662573
+	Store Instructions: 65331127125
+	Branch Instructions: 50492769615
+	Other Instructions: 18446744054032529365
+
+
+Count of -- 
+
+	Conditional Branches: 46670399962
+		Taken: 22328511663 (47%)
+	Forward Conditional Branches: 17278602500
+		Taken: 8087857079 (46%)
+
+
+Number of basic blocks: 53549524330
+Average Basic Block Size: 6.95658
+
+
+RAW between 0 to 2: 3587887946
+RAW between 3 to 8: 809653425
+RAW between 9 to 32: 840868823
+RAW between 33 to INF: 625597192273
+
+WAW between 0 to 2: 3492173945
+WAW between 3 to 8: 753770656
+WAW between 9 to 32: 32446049
+WAW between 33 to INF: 387005874538
+
+WAR between 0 to 2: 1693707844
+WAR between 3 to 8: 484777825
+WAR between 9 to 32: 27856806
+WAR between 33 to INF: 389077922734
+
+
+Temporal Density Byte 0 to 2: 57906762836
+Temporal Density Byte 3 to 8: 66847889350
+Temporal Density Byte 9 to 16: 30075539286
+Temporal Density Byte 17 to 32: 20240239309
+Temporal Density Byte 33 to INF: 43354005956
+
+
+Temporal Density Cache Line 0 to 2: 120848344604
+Temporal Density Cache Line 3 to 8: 60165845824
+Temporal Density Cache Line 9 to 16: 13503676683
+Temporal Density Cache Line 17 to 32: 9014002495
+Temporal Density Cache Line 33 to INF: 14925778763
+
+
+Temporal Density Page Size 0 to 2: 160959186987
+Temporal Density Page Size 3 to 8: 36743037677
+Temporal Density Page Size 9 to 16: 7568525056
+Temporal Density Page Size 17 to 32: 6463996338
+Temporal Density Page Size 33 to INF: 6724319808
+
+

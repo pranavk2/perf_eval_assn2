@@ -1,0 +1,60 @@
+Count of --
+
+	All Instructions: 788926
+	Integer Instructions: 229519
+	Floating Point Instructions: 0
+	Load Instructions: 223298
+	Store Instructions: 112411
+	Branch Instructions: 114627
+	Other Instructions: 109071
+
+
+Count of -- 
+
+	Conditional Branches: 114075
+		Taken: 106374 (93%)
+	Forward Conditional Branches: 8355
+		Taken: 1473 (17%)
+
+
+Number of basic blocks: 118557
+Average Basic Block Size: 6.6544
+
+
+RAW between 0 to 2: 795236
+RAW between 3 to 8: 521617
+RAW between 9 to 32: 9269
+RAW between 33 to INF: 10769
+
+WAW between 0 to 2: 583788
+WAW between 3 to 8: 217400
+WAW between 9 to 32: 355
+WAW between 33 to INF: 4387
+
+WAR between 0 to 2: 675181
+WAR between 3 to 8: 120601
+WAR between 9 to 32: 3465
+WAR between 33 to INF: 6640
+
+
+Temporal Density Byte 0 to 2: 106464
+Temporal Density Byte 3 to 8: 2126
+Temporal Density Byte 9 to 16: 1631
+Temporal Density Byte 17 to 32: 2478
+Temporal Density Byte 33 to INF: 16165
+
+
+Temporal Density Cache Line 0 to 2: 220490
+Temporal Density Cache Line 3 to 8: 102082
+Temporal Density Cache Line 9 to 16: 1078
+Temporal Density Cache Line 17 to 32: 969
+Temporal Density Cache Line 33 to INF: 4118
+
+
+Temporal Density Page Size 0 to 2: 227145
+Temporal Density Page Size 3 to 8: 104740
+Temporal Density Page Size 9 to 16: 1191
+Temporal Density Page Size 17 to 32: 721
+Temporal Density Page Size 33 to INF: 1635
+
+

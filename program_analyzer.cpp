@@ -72,6 +72,8 @@ unordered_map<UINT64, UINT64> reref2;
 
 unordered_map<UINT64, UINT64> reref3;
 
+UINT64 rerefdist[33], rerefdist2[33], rerefdist3[33];
+
 
 
 UINT64 test = 0;
@@ -231,8 +233,8 @@ VOID calcdependancy(UINT32* readarr, UINT32 readlen, UINT32* writearr, UINT32 wr
 	for (i=0; i<writelen; i++)
 		write_i[writearr[i]] = *inscount;
 }
-
-VOID calcrerefbyte(VOID* addr)
+/*
+VOID calcrerefbyteold(VOID* addr)
 {
 	UINT64 access= (UINT64) addr/8;
 	UINT64 diff = 0;
@@ -243,12 +245,12 @@ VOID calcrerefbyte(VOID* addr)
 	else
 	{
 		diff = stats->_meminstrcount - reref[access];
-		/*cout << "diff " << diff << endl;
+		cout << "diff " << diff << endl;
 		if (diff > max_diff)
 		{
 			max_diff = diff;
 			cout << "max " << max_diff << endl;
-		}*/
+		}
 		if (diff <= 2)
 			stats->_temp1_02++;
 		else if (diff <= 8)
@@ -263,10 +265,146 @@ VOID calcrerefbyte(VOID* addr)
 		reref[access] = stats->_meminstrcount;
 	}
 
+}*/
+
+VOID calcrerefbyte(VOID* addr)
+{
+	UINT64 access = (UINT64) addr/8;
+	int i;
+	if (reref.find(access) == reref.end()) // not found in the map
+	{
+		reref[access] = 1; // allocate a new entry in the map
+
+		for (int k=32; k>0; k--)
+			rerefdist[k] = rerefdist[k-1];
+		rerefdist[0] = access;
+	}
+	else // if found in the map, means it is a re-reference
+	{
+		for (i=0; i<33; i++)
+		{
+			if (rerefdist[i] == access)
+			{
+				break;
+			}
+
+		}
+		if (i <= 2)
+			stats->_temp1_02++;
+		else if (i <= 8)
+			stats->_temp1_38++;
+		else if (i <= 16)
+			stats->_temp1_916++;
+		else if (i <= 32)
+			stats->_temp1_1732++;
+		else 
+			stats->_temp1_33++;
+
+		
+		for (int j=i; j>0; j--)
+		{
+			if (j < 33)
+				rerefdist[j] = rerefdist[j-1];
+		}
+		
+		rerefdist[0] = access;
+	}
+
+}
+VOID calcrerefcl(VOID* addr)
+{
+	UINT64 access = (UINT64) addr/(8*32);
+	int i;
+	if (reref2.find(access) == reref2.end()) // not found in the map
+	{
+		reref2[access] = 1; // allocate a new entry in the map
+
+		for (int k=32; k>0; k--)
+			rerefdist2[k] = rerefdist2[k-1];
+		rerefdist2[0] = access;
+	}
+	else // if found in the map, means it is a re-reference
+	{
+		for (i=0; i<33; i++)
+		{
+			if (rerefdist2[i] == access)
+			{
+				break;
+			}
+
+		}
+		if (i <= 2)
+			stats->_temp32_02++;
+		else if (i <= 8)
+			stats->_temp32_38++;
+		else if (i <= 16)
+			stats->_temp32_916++;
+		else if (i <= 32)
+			stats->_temp32_1732++;
+		else 
+			stats->_temp32_33++;
+
+		
+		for (int j=i; j>0; j--)
+		{
+			if (j < 33)
+				rerefdist2[j] = rerefdist2[j-1];
+		}
+		
+		rerefdist2[0] = access;
+	}
+
 }
 
 
-VOID calcrerefcl(VOID* addr)
+VOID calcrerefpage(VOID* addr)
+{
+	UINT64 access = (UINT64) addr/(8*1024*4);
+	int i;
+	if (reref3.find(access) == reref3.end()) // not found in the map
+	{
+		reref3[access] = 1; // allocate a new entry in the map
+		for (int k=32; k>0; k--)
+			rerefdist3[k] = rerefdist3[k-1];
+		rerefdist3[0] = access;
+	}
+	else // if found in the map, means it is a re-reference
+	{
+		for (i=0; i<33; i++)
+		{
+			if (rerefdist3[i] == access)
+			{
+				break;
+			}
+
+		}
+		if (i <= 2)
+			stats->_temp4k_02++;
+		else if (i <= 8)
+			stats->_temp4k_38++;
+		else if (i <= 16)
+			stats->_temp4k_916++;
+		else if (i <= 32)
+			stats->_temp4k_1732++;
+		else 
+			stats->_temp4k_33++;
+
+		
+		for (int j=i; j>0; j--)
+		{
+			if (j < 33)
+				rerefdist3[j] = rerefdist3[j-1];
+		}
+		
+		rerefdist3[0] = access;
+	}
+
+}
+
+
+/*
+
+VOID calcrerefclold(VOID* addr)
 {
 	UINT64 access= (UINT64) addr/(8*32);
 	UINT64 diff = 0;
@@ -277,12 +415,12 @@ VOID calcrerefcl(VOID* addr)
 	else
 	{
 		diff = stats->_meminstrcount - reref2[access];
-		/*cout << "diff " << diff << endl;
+		cout << "diff " << diff << endl;
 		if (diff > max_diff)
 		{
 			max_diff = diff;
 			cout << "max " << max_diff << endl;
-		}*/
+		}
 		if (diff <= 2)
 			stats->_temp32_02++;
 		else if (diff <= 8)
@@ -300,7 +438,7 @@ VOID calcrerefcl(VOID* addr)
 }
 
 
-VOID calcrerefpage(VOID* addr)
+VOID calcrerefpageold(VOID* addr)
 {
 	UINT64 access= (UINT64) addr/(8*4*1024);
 	UINT64 diff = 0;
@@ -311,12 +449,12 @@ VOID calcrerefpage(VOID* addr)
 	else
 	{
 		diff = stats->_meminstrcount - reref3[access];
-		/*cout << "diff " << diff << endl;
+		cout << "diff " << diff << endl;
 		if (diff > max_diff)
 		{
 			max_diff = diff;
 			cout << "max " << max_diff << endl;
-		}*/
+		}
 		if (diff <= 2)
 			stats->_temp4k_02++;
 		else if (diff <= 8)
@@ -332,7 +470,7 @@ VOID calcrerefpage(VOID* addr)
 	}
 
 }
-
+*/
 
 
 
@@ -564,8 +702,8 @@ VOID Instruction(INS ins, VOID *v) // instrumentation routine
 	UINT32 memops = INS_MemoryOperandCount(ins);
 	UINT32 memop;
 
-	if (memops != 0)
-		INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_PTR, &(stats->_meminstrcount), IARG_END); 
+	//if (memops != 0)
+	//	INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)docount, IARG_PTR, &(stats->_meminstrcount), IARG_END); 
 
 	for (memop=0; memop<memops; memop++)
 	{
@@ -714,6 +852,16 @@ int main(int argc, char* argv[])
 		write_i[i] = 0;
 	//for (int i=0; i<1000; i++)
 	//	refarray[i] = 0;
+	//
+	//
+	
+	for (int i=0; i<33; i++)
+	{
+		rerefdist[i] = 0;
+		rerefdist2[i] = 0;
+		rerefdist3[i] = 0;
+	}
+
 	max_diff = 0;
 
 	cout << "beginning" << endl;

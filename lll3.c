@@ -2,7 +2,7 @@
 
 void main() {
     int l,loop,k,n;
-    loop = 10000;
+    loop = 100000;
     n = 10000;
     double q;
 
