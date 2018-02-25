@@ -733,7 +733,7 @@ VOID Fini(INT32 code, VOID *v)
 	UINT64 totalexceptothers = (stats->_intcount + stats->_fpcount + stats->_loadcount + stats->_storecount + stats->_brcount);
 	stats->_othercount = stats->_instrcount - totalexceptothers;
 	OutFile.setf(ios::showbase);
-	OutFile << "Count of --" << endl << endl;
+	/*OutFile << "Count of --" << endl << endl;
 	OutFile << "	All Instructions: " << stats->_instrcount << endl;
 	//OutFile << "Total Except Others: " << totalexceptothers << endl;
 	OutFile << "	Integer Instructions: " << stats->_intcount << endl;
@@ -784,6 +784,57 @@ VOID Fini(INT32 code, VOID *v)
 	OutFile << "Temporal Density Page Size 9 to 16: " << stats->_temp4k_916 << endl;
 	OutFile << "Temporal Density Page Size 17 to 32: " << stats->_temp4k_1732 << endl;
 	OutFile << "Temporal Density Page Size 33 to INF: " << stats->_temp4k_33 << endl << endl << endl;
+
+	*/
+	cout << stats->_instrcount << endl;
+	cout << stats->_intcount << endl;
+	cout << stats->_fpcount << endl;
+	cout << stats->_loadcount << endl;
+	cout << stats->_storecount << endl;
+	cout << stats->_brcount << endl;
+	
+	taken = 1.0 * stats->_takencondbrcount * 100 / stats->_condbrcount;
+	takenfwd = 1.0 * stats->_takenfwdbrcount * 100 / stats->_fwdbrcount;
+	
+	cout << taken << endl;
+	cout << takenfwd << endl;
+
+	avgbblsize = 1.0 * stats->_instrcount / stats->_bblcount;
+
+	cout << avgbblsize << endl;
+
+	cout << stats->_rawdep02 << endl;
+	cout << stats->_rawdep38 << endl;
+	cout << stats->_rawdep932 << endl;
+	cout << stats->_rawdep32 << endl;
+	
+	cout << stats->_wawdep02 << endl;
+	cout << stats->_wawdep38 << endl;
+	cout << stats->_wawdep932 << endl;
+	cout << stats->_wawdep32 << endl;
+
+	cout << stats->_wardep02 << endl;
+	cout << stats->_wardep38 << endl;
+	cout << stats->_wardep932 << endl;
+	cout << stats->_wardep32 << endl;
+
+	cout << stats->_temp1_02 << endl;
+	cout << stats->_temp1_38 << endl;
+	cout << stats->_temp1_916 << endl;
+	cout << stats->_temp1_1732 << endl;
+	cout << stats->_temp1_33 << endl;
+
+	cout << stats->_temp32_02 << endl;
+	cout << stats->_temp32_38 << endl;
+	cout << stats->_temp32_916 << endl;
+	cout << stats->_temp32_1732 << endl;
+	cout << stats->_temp32_33 << endl;
+
+	cout << stats->_temp4k_02 << endl;
+	cout << stats->_temp4k_38 << endl;
+	cout << stats->_temp4k_916 << endl;
+	cout << stats->_temp4k_1732 << endl;
+	cout << stats->_temp4k_33 << endl;
 }
 INT32 Usage()
 {
@@ -844,7 +895,7 @@ int main(int argc, char* argv[])
 
 
 	
-	cout << "before for loops" << endl;
+	//cout << "before for loops" << endl;
 
 	for (int i=0; i<200; i++)
 		read_i[i] = 0;
@@ -864,19 +915,19 @@ int main(int argc, char* argv[])
 
 	max_diff = 0;
 
-	cout << "beginning" << endl;
+	//cout << "beginning" << endl;
 	if (PIN_Init(argc, argv))
 		return Usage();
-	cout << "after pin init" << endl;
+	//cout << "after pin init" << endl;
 	OutFile.open(KnobOutputFile.Value().c_str());
-	cout << "after knob output file" << endl;
+	//cout << "after knob output file" << endl;
 	INS_AddInstrumentFunction(Instruction, 0);
-	cout << "after instrumentation function" << endl;
+	//cout << "after instrumentation function" << endl;
 	TRACE_AddInstrumentFunction(Trace, 0);
-	cout << "after trace instrumentation function" << endl;
+	//cout << "after trace instrumentation function" << endl;
 	PIN_AddFiniFunction(Fini, 0);
-	cout << "adding finish function and starting program" << endl;
+	//cout << "adding finish function and starting program" << endl;
 	PIN_StartProgram();
-	cout << "this will never be printed" << endl;
+	//cout << "this will never be printed" << endl;
 	return 0;
 }
